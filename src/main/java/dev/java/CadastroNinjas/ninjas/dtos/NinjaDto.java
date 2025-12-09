@@ -7,8 +7,8 @@ import java.time.LocalDate;
 public record NinjaDto(
 
         @NotBlank(message = "Name is required")
-        @Size(min = 2, max = 40)
         @Pattern(regexp = "^[a-zA-Z ]+$", message = "Name must contain only letters")
+        @Size(min = 2, max = 40)
         String name,
 
         @NotBlank(message = "Password is required")
@@ -21,5 +21,7 @@ public record NinjaDto(
         @NotBlank(message = "Username is required")
         @Size(min = 4, max = 30)
         @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Username contains invalid characters")
-        String username
+        String username,
+
+        Long missionId
 ) {}

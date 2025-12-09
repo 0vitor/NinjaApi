@@ -1,5 +1,6 @@
 package dev.java.CadastroNinjas.ninjas;
 
+import dev.java.CadastroNinjas.missions.MissionModel;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,21 +17,24 @@ import java.util.List;
 public class NinjaModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
     @Column(nullable = false)
-    String name;
+    private String name;
 
     @Column(name = "username", unique = true, nullable = false)
-    String username;
+    private String username;
 
     @Column(columnDefinition = "text[]")
-    List<String> role;
+    private List<String> role;
 
     @Column(nullable = false)
-    LocalDate birthDate;
+    private LocalDate birthDate;
 
     @Column(nullable = false)
-    String password;
+    private String password;
 
+    @ManyToOne
+    @JoinColumn(name = "mission_id")
+    private MissionModel mission;
 }

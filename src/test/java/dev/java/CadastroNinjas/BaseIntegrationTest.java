@@ -50,7 +50,8 @@ public abstract class BaseIntegrationTest {
                 "usertest",
                 "123456",
                 LocalDate.of(2002, 6, 22),
-                "usertest"
+                "usertest",
+                null
         );
         ninjaService.create(ninja);
     }

@@ -31,7 +31,7 @@ public class SecurityConfiguration {
                 .formLogin(Customizer.withDefaults())
                 .authorizeHttpRequests(authorize -> {
                     authorize.requestMatchers(HttpMethod.DELETE, "/api/ninjas").hasRole("ADMIN");
-                    authorize.requestMatchers("/api/signup/ninja").permitAll();
+                    authorize.requestMatchers("/api/signup").permitAll();
                     authorize.requestMatchers("/api/**").hasAnyRole("USER", "ADMIN");
                     authorize.anyRequest().authenticated();
                 })

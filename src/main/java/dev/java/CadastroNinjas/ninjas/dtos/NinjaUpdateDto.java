@@ -15,5 +15,7 @@ public record NinjaUpdateDto(
 
         @Size(min = 4, max = 30)
         @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Username contains invalid characters")
-        String username
+        String username,
+
+        Long missionId
 ) {}

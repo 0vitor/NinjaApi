@@ -4,25 +4,19 @@ import dev.java.CadastroNinjas.ninjas.dtos.NinjaDto;
 import dev.java.CadastroNinjas.ninjas.dtos.NinjaResponseDto;
 import dev.java.CadastroNinjas.ninjas.dtos.NinjaUpdateDto;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class NinjaController {
     private final NinjaService ninjaService;
-
-    public NinjaController(NinjaService ninjaService) {
-        this.ninjaService = ninjaService;
-    }
 
     @GetMapping("/ninjas")
     public ResponseEntity<List<NinjaResponseDto>> getNinjas() {
@@ -42,7 +36,7 @@ public class NinjaController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/signup/ninja")
+    @PostMapping("/signup")
     public ResponseEntity<NinjaResponseDto> createNinja(@RequestBody @Valid NinjaDto dto) {
         NinjaResponseDto ninja = ninjaService.create(dto);
         URI location = URI.create("/api/ninja/" + ninja.id());
@@ -59,23 +53,5 @@ public class NinjaController {
         return updated
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-
-        ex.getBindingResult()
-          .getAllErrors()
-          .forEach((error) -> {
-              String fieldName = ((FieldError) error).getField();
-              String errorMessage = error.getDefaultMessage();
-              errors.put(fieldName, errorMessage);
-          });
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("errors", errors);
-
-        return ResponseEntity.badRequest().body(response);
     }
 }

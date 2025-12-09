@@ -2,6 +2,7 @@ package dev.java.CadastroNinjas;
 
 import dev.java.CadastroNinjas.ninjas.dtos.NinjaDto;
 import dev.java.CadastroNinjas.ninjas.dtos.NinjaUpdateDto;
+import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -15,19 +16,22 @@ class NinjaControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @WithMockUser(username = "Itachi1", roles = "ADMIN")
+    @NotNull(message = "Mission ID is required")
     void shouldAllowAdminToUpdateOtherUser() throws Exception {
         NinjaDto ninja = new NinjaDto(
                 "Itachi Uchiha",
                 "092438",
                 LocalDate.of(1992, 3, 10),
-                "Itachi1"
+                "Itachi1",
+                null
         );
 
         NinjaDto ninja2 = new NinjaDto(
                 "Itachi Uchiha",
                 "092438",
                 LocalDate.of(1992, 3, 10),
-                "Itachi2"
+                "Itachi2",
+                null
         );
 
         ninjaService.create(ninja);
@@ -35,6 +39,7 @@ class NinjaControllerIntegrationTest extends BaseIntegrationTest {
 
         NinjaUpdateDto updateDto = new NinjaUpdateDto(
                 "Sasuke Uchiha",
+                null,
                 null,
                 null
         );
@@ -54,12 +59,14 @@ class NinjaControllerIntegrationTest extends BaseIntegrationTest {
                 "Itachi Uchiha",
                 "092438",
                 LocalDate.of(1992, 3, 10),
-                "Itachi1"
+                "Itachi1",
+                null
         );
         Long id = ninjaService.create(ninja).id();
 
         NinjaUpdateDto updateDto = new NinjaUpdateDto(
                 "Sasuke Uchiha",
+                null,
                 null,
                 null
         );
@@ -81,7 +88,8 @@ class NinjaControllerIntegrationTest extends BaseIntegrationTest {
                 "Itachi Uchiha",
                 "092438",
                 LocalDate.of(1992, 3, 10),
-                "Itachi1"
+                "Itachi1",
+                null
         );
         ninjaService.create(ninja);
         Long usertestId = ninjaService.findByUsername("usertest")
@@ -91,6 +99,7 @@ class NinjaControllerIntegrationTest extends BaseIntegrationTest {
 
         NinjaUpdateDto updateDto = new NinjaUpdateDto(
                 "Sasuke Uchiha",
+                null,
                 null,
                 null
         );
@@ -109,6 +118,7 @@ class NinjaControllerIntegrationTest extends BaseIntegrationTest {
         NinjaUpdateDto updateDto = new NinjaUpdateDto(
                 "Novo Nome",
                 null,
+                null,
                 null
         );
         String body = objectMapper.writeValueAsString(updateDto);
@@ -125,7 +135,8 @@ class NinjaControllerIntegrationTest extends BaseIntegrationTest {
                 "Itachi Uchiha",
                 "092438",
                 LocalDate.of(1992, 3, 10),
-                "Itachi1"
+                "Itachi1",
+                null
         );
         Long id = ninjaService.create(ninja).id();
 
@@ -141,7 +152,8 @@ class NinjaControllerIntegrationTest extends BaseIntegrationTest {
                 "Itachi Uchiha",
                 "092438",
                 LocalDate.of(1992, 3, 10),
-                "Itachi1"
+                "Itachi1",
+                null
         );
         ninjaService.create(ninja);
 
@@ -168,14 +180,16 @@ class NinjaControllerIntegrationTest extends BaseIntegrationTest {
                 "Sasuke Uchiha",
                 "abcdef",
                 LocalDate.of(1992, 7, 23),
-                "Sasuke1"
+                "Sasuke1",
+                null
         ));
 
         ninjaService.create(new NinjaDto(
                 "Sakura Haruno",
                 "123456",
                 LocalDate.of(1993, 3, 28),
-                "Sakura1"
+                "Sakura1",
+                null
         ));
 
         int usertest = 1;
@@ -192,7 +206,8 @@ class NinjaControllerIntegrationTest extends BaseIntegrationTest {
                 "Naruto Uzumaki",
                 "123456",
                 LocalDate.of(1990, 10, 10),
-                "Naruto1"
+                "Naruto1",
+                null
         );
 
         mvc.perform(post("/api/signup/ninja")
@@ -212,7 +227,8 @@ class NinjaControllerIntegrationTest extends BaseIntegrationTest {
                 "Naruto Uzumaki",
                 "123456",
                 LocalDate.of(1990, 10, 10),
-                "usertest"
+                "usertest",
+                null
         );
 
         mvc.perform(post("/api/signup/ninja")
@@ -229,7 +245,8 @@ class NinjaControllerIntegrationTest extends BaseIntegrationTest {
                 "",
                 "",
                 LocalDate.of(2000, 1, 1),
-                ""
+                "",
+                null
         );
 
         mvc.perform(post("/api/signup/ninja")
