@@ -1,11 +1,11 @@
 package dev.java.CadastroNinjas.mapper;
 
-import dev.java.CadastroNinjas.ninja.dtos.NinjaResponseDto;
-import dev.java.CadastroNinjas.ninja.dtos.NinjaUpdateDto;
+import dev.java.CadastroNinjas.ninjas.dtos.NinjaResponseDto;
+import dev.java.CadastroNinjas.ninjas.dtos.NinjaUpdateDto;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
-import dev.java.CadastroNinjas.ninja.dtos.NinjaDto;
-import dev.java.CadastroNinjas.ninja.NinjaModel;
+import dev.java.CadastroNinjas.ninjas.dtos.NinjaDto;
+import dev.java.CadastroNinjas.ninjas.NinjaModel;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 

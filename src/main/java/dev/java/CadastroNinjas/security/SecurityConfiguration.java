@@ -8,7 +8,6 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractAuthenticationFilterConfigurer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,16 +24,15 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain secutiryFilterChain(HttpSecurity httpSecurity) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) {
         return httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(Customizer.withDefaults())
-                .formLogin(AbstractAuthenticationFilterConfigurer::permitAll)
+                .formLogin(Customizer.withDefaults())
                 .authorizeHttpRequests(authorize -> {
-//                    authorize.requestMatchers("/signup/ninja").permitAll();
-//                    authorize.requestMatchers("/ninjas").hasRole("USER");
-//                    authorize.requestMatchers("/ninja/**").hasRole("USER");
-                    authorize.requestMatchers(HttpMethod.DELETE, "/ninjas").hasRole("ADMIN");
+                    authorize.requestMatchers(HttpMethod.DELETE, "/api/ninjas").hasRole("ADMIN");
+                    authorize.requestMatchers("/api/signup/ninja").permitAll();
+                    authorize.requestMatchers("/api/**").hasAnyRole("USER", "ADMIN");
                     authorize.anyRequest().authenticated();
                 })
                 .build();

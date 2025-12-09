@@ -1,4 +1,4 @@
-package dev.java.CadastroNinjas.ninja.dtos;
+package dev.java.CadastroNinjas.ninjas.dtos;
 
 import java.time.LocalDate;
 

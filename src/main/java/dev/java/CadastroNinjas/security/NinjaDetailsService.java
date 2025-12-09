@@ -1,7 +1,7 @@
 package dev.java.CadastroNinjas.security;
 
-import dev.java.CadastroNinjas.ninja.NinjaModel;
-import dev.java.CadastroNinjas.ninja.NinjaRepository;
+import dev.java.CadastroNinjas.ninjas.NinjaModel;
+import dev.java.CadastroNinjas.ninjas.NinjaRepository;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

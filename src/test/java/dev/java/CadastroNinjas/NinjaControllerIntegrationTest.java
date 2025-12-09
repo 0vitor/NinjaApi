@@ -1,96 +1,54 @@
 package dev.java.CadastroNinjas;
 
-import dev.java.CadastroNinjas.ninja.dtos.NinjaDto;
-import dev.java.CadastroNinjas.ninja.NinjaService;
-import dev.java.CadastroNinjas.ninja.dtos.NinjaUpdateDto;
-import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import dev.java.CadastroNinjas.ninjas.dtos.NinjaDto;
+import dev.java.CadastroNinjas.ninjas.dtos.NinjaUpdateDto;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
-import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@ActiveProfiles("test") // usa application-test.properties
-class NinjaControllerIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private NinjaService ninjaService;
-
-    private String sessionId;
-
-    @BeforeAll
-    void setup() throws Exception {
-        String username = "usertest";
-        String password = "123456";
-
-        // Cria o usuário apenas se não existir
-        if (ninjaService.findByUsername(username).isEmpty()) {
-            MvcResult signupResult = mockMvc.perform(post("/signup/ninja")
-                                                             .contentType(MediaType.APPLICATION_JSON)
-                                                             .content(objectMapper.writeValueAsString(new NinjaDto(
-                                                                     "Naruto Uzumaki",
-                                                                     "123456",
-                                                                     LocalDate.of(1990, 10, 10),
-                                                                     "usertest"
-                                                             ))))
-                                            .andReturn();
-
-        }
-    }
-
-    @BeforeEach
-    void clearUp() {
-        ninjaService.deleteAllExceptUserTest();
-    }
-
+class NinjaControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
-    void performFailLogin() throws Exception {
-        mockMvc.perform(formLogin().password("invalid"))
-                .andExpect(unauthenticated());
+    @WithMockUser(username = "Itachi1", roles = "ADMIN")
+    void shouldAllowAdminToUpdateOtherUser() throws Exception {
+        NinjaDto ninja = new NinjaDto(
+                "Itachi Uchiha",
+                "092438",
+                LocalDate.of(1992, 3, 10),
+                "Itachi1"
+        );
+
+        NinjaDto ninja2 = new NinjaDto(
+                "Itachi Uchiha",
+                "092438",
+                LocalDate.of(1992, 3, 10),
+                "Itachi2"
+        );
+
+        ninjaService.create(ninja);
+        Long ninja2Id = ninjaService.create(ninja2).id();
+
+        NinjaUpdateDto updateDto = new NinjaUpdateDto(
+                "Sasuke Uchiha",
+                null,
+                null
+        );
+
+        String body = objectMapper.writeValueAsString(updateDto);
+
+        mvc.perform(patch("/api/ninja/" + ninja2Id)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+           .andExpect(status().isOk());
     }
 
     @Test
-    void performLogin() throws Exception {
-        mockMvc.perform(formLogin().user("usertest").password("123456"))
-               .andExpect(authenticated());
-    }
-
-    @Test
-    @WithMockUser(username = "usertest")
-    void testAdminEndpointWithAdminRole() throws Exception {
-        mockMvc.perform(get("/ninjas"))
-               .andExpect(status().isOk());
-    }
-
-    @Test
+    @WithMockUser(username = "Itachi1", roles = "USER")
     void shouldUpdateNinjaSuccessfully() throws Exception {
         NinjaDto ninja = new NinjaDto(
                 "Itachi Uchiha",
@@ -108,32 +66,60 @@ class NinjaControllerIntegrationTest {
 
         String body = objectMapper.writeValueAsString(updateDto);
 
-        mockMvc.perform(patch("/api/ninja/" + id)
-                                .contentType(MediaType.APPLICATION_JSON).header("Cookie", sessionId)
-                                .content(body).header("Cookie", sessionId))
+        mvc.perform(patch("/api/ninja/" + id)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
                .andExpect(status().isOk())
                .andExpect(jsonPath("$.name").value("Sasuke Uchiha"))
                .andExpect(jsonPath("$.birthDate").value("1992-03-10"));
     }
 
     @Test
-    void shouldReturnNotFoundWhenUpdatingNonExistingNinja() throws Exception {
+    @WithMockUser(username = "Itachi1", roles = "USER")
+    void shouldForbidUserFromUpdatingAnotherUser() throws Exception {
+        NinjaDto ninja = new NinjaDto(
+                "Itachi Uchiha",
+                "092438",
+                LocalDate.of(1992, 3, 10),
+                "Itachi1"
+        );
+        ninjaService.create(ninja);
+        Long usertestId = ninjaService.findByUsername("usertest")
+                                      .orElseThrow(() -> new IllegalStateException("Usuário 'usertest' não existe no banco de testes"))
+                                      .getId();
+
+
         NinjaUpdateDto updateDto = new NinjaUpdateDto(
-                "Novo Nome",
+                "Sasuke Uchiha",
                 null,
                 null
         );
 
         String body = objectMapper.writeValueAsString(updateDto);
 
-        mockMvc.perform(patch("/api/ninja/999999") // id inexistente
+        mvc.perform(patch("/api/ninja/" + usertestId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+           .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "usertest", roles = "USER")
+    void shouldReturnNotFoundWhenUpdatingNonexistentUser() throws Exception {
+        NinjaUpdateDto updateDto = new NinjaUpdateDto(
+                "Novo Nome",
+                null,
+                null
+        );
+        String body = objectMapper.writeValueAsString(updateDto);
+        mvc.perform(patch("/api/ninja/999999") // id inexistente
                                                    .contentType(MediaType.APPLICATION_JSON)
-                                                   .header("Cookie", sessionId)
-                                                   .content(body).header("Cookie", sessionId))
+                                                   .content(body))
                .andExpect(status().isNotFound());
     }
 
     @Test
+    @WithMockUser(username = "usertest", roles = "USER")
     void shouldReturnOneNinja() throws Exception {
         NinjaDto ninja = new NinjaDto(
                 "Itachi Uchiha",
@@ -143,13 +129,13 @@ class NinjaControllerIntegrationTest {
         );
         Long id = ninjaService.create(ninja).id();
 
-        mockMvc.perform(get("/api/ninja/" + id).contentType(MediaType.APPLICATION_JSON)
-                                               .header("Cookie", sessionId))
+        mvc.perform(get("/api/ninja/" + id).contentType(MediaType.APPLICATION_JSON))
                .andExpect(status().isOk())
                .andExpect(jsonPath("$.name").value(ninja.name()));
     }
 
     @Test
+    @WithMockUser(username = "usertest", roles = "USER")
     void shouldReturnNotFoundNinja() throws Exception {
         NinjaDto ninja = new NinjaDto(
                 "Itachi Uchiha",
@@ -159,22 +145,24 @@ class NinjaControllerIntegrationTest {
         );
         ninjaService.create(ninja);
 
-        mockMvc.perform(get("/api/ninja/2").contentType(MediaType.APPLICATION_JSON).header("Cookie", sessionId))
+        mvc.perform(get("/api/ninja/2").contentType(MediaType.APPLICATION_JSON))
                .andExpect(status().isNotFound());
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoNinjasExist() throws Exception {
+    @WithMockUser(username = "usertest", roles = "USER")
+    void shouldReturnListWithOneNinja() throws Exception {
 
-        mockMvc.perform(get("/api/ninjas")
+        mvc.perform(get("/api/ninjas")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .header("Cookie", sessionId))
+                                )
                .andExpect(status().isOk())
                .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$.length()").value(0)); // lista vazia
+               .andExpect(jsonPath("$.length()").value(1));
     }
 
     @Test
+    @WithMockUser(username = "usertest", roles = "USER")
     void shouldReturnListOfNinjas() throws Exception {
         ninjaService.create(new NinjaDto(
                 "Sasuke Uchiha",
@@ -191,13 +179,14 @@ class NinjaControllerIntegrationTest {
         ));
 
         int usertest = 1;
-        mockMvc.perform(get("/api/ninjas").contentType(MediaType.APPLICATION_JSON).header("Cookie", sessionId))
+        mvc.perform(get("/api/ninjas").contentType(MediaType.APPLICATION_JSON))
                .andExpect(status().isOk())
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$.length()").value(2 + usertest));
     }
 
     @Test
+    @WithMockUser(username = "usertest", roles = "USER")
     void shouldCreateNinjaSuccessfully() throws Exception {
         NinjaDto ninja = new NinjaDto(
                 "Naruto Uzumaki",
@@ -206,8 +195,8 @@ class NinjaControllerIntegrationTest {
                 "Naruto1"
         );
 
-        mockMvc.perform(post("/api/ninja")
-                                .contentType(MediaType.APPLICATION_JSON).header("Cookie", sessionId)
+        mvc.perform(post("/api/signup/ninja")
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(ninja)))
                .andExpect(status().isCreated())
                .andExpect(header().exists("Location"))
@@ -217,6 +206,24 @@ class NinjaControllerIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = "usertest", roles = "USER")
+    void shouldNotCreateIfUsernameAlreadyExist() throws Exception {
+        NinjaDto ninja = new NinjaDto(
+                "Naruto Uzumaki",
+                "123456",
+                LocalDate.of(1990, 10, 10),
+                "usertest"
+        );
+
+        mvc.perform(post("/api/signup/ninja")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(ninja)))
+           .andExpect(status().isConflict());
+    }
+
+
+    @Test
+    @WithMockUser(username = "usertest", roles = "USER")
     void shouldReturnValidationErrorForInvalidNinja() throws Exception {
         NinjaDto ninja = new NinjaDto(
                 "",
@@ -225,8 +232,9 @@ class NinjaControllerIntegrationTest {
                 ""
         );
 
-        mockMvc.perform(post("/api/ninja").contentType(MediaType.APPLICATION_JSON).header("Cookie", sessionId)
-                                          .content(objectMapper.writeValueAsString(ninja)))
+        mvc.perform(post("/api/signup/ninja")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(ninja)))
                .andExpect(status().isBadRequest())
                .andExpect(jsonPath("$.errors").exists());
     }
